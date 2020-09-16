@@ -9,7 +9,7 @@ import warnings
 from typing import List, Optional, Tuple, Union
 
 import torch
-import torchcsprng as csprng
+# import torchcsprng as csprng
 from torch import nn
 
 from . import privacy_analysis as tf_privacy
@@ -105,9 +105,9 @@ class PrivacyEngine:
 
         if self.secure_rng:
             self.seed = None
-            self.random_number_generator = csprng.create_random_device_generator(
-                "/dev/urandom"
-            )
+            # self.random_number_generator = csprng.create_random_device_generator(
+            #     "/dev/urandom"
+            # )
         else:
             warnings.warn(
                 "Secure RNG turned off. This is perfectly fine for experimentation as it allows "
