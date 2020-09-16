@@ -284,7 +284,7 @@ class PrivacyEngine:
                 noise /= batch_size
             p.grad += noise
 
-    def to(self, device: Union[str, torch.device]) -> PrivacyEngine:
+    def to(self, device: Union[str, torch.device]):
         """
         Moves the privacy engine to the target device.
 
