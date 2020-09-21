@@ -262,6 +262,9 @@ def main():
     )
     torch.save(run_results, f"run_results_{repro_str}.pt")
 
+    if args.save_model and args.disable_dp:
+        torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn.pt"))
+
 
 if __name__ == "__main__":
     main()
