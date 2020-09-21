@@ -229,25 +229,24 @@ def main():
         **kwargs,
     )
     run_results = []
-    for _ in range(args.n_runs):
-        model = SampleConvNet().to(device)
+    model = SampleConvNet().to(device)
 
-        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
-        if not args.disable_dp:
-            privacy_engine = PrivacyEngine(
-                model,
-                batch_size=args.batch_size,
-                sample_size=len(train_loader.dataset),
-                alphas=[1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64)),
-                noise_multiplier=args.sigma,
-                max_grad_norm=args.max_per_sample_grad_norm,
-            )
-            privacy_engine.attach(optimizer)
-        for epoch in range(1, args.epochs + 1):
-            train(args, model, device, train_loader, optimizer, epoch)
-            if args.save_model and not args.disable_dp:
-                torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn_dp_{epoch}.pt"))
-        run_results.append(test(args, model, device, test_loader))
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
+    if not args.disable_dp:
+        privacy_engine = PrivacyEngine(
+            model,
+            batch_size=args.batch_size,
+            sample_size=len(train_loader.dataset),
+            alphas=[1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64)),
+            noise_multiplier=args.sigma,
+            max_grad_norm=args.max_per_sample_grad_norm,
+        )
+        privacy_engine.attach(optimizer)
+    for epoch in range(1, args.epochs + 1):
+        train(args, model, device, train_loader, optimizer, epoch)
+        if args.save_model and not args.disable_dp:
+            torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn_dp_{epoch}.pt"))
+    run_results.append(test(args, model, device, test_loader))
 
     if len(run_results) > 1:
         print(
