@@ -7,6 +7,7 @@ Runs MNIST training with differential privacy.
 """
 
 import argparse
+import os
 
 import numpy as np
 import torch
@@ -182,9 +183,15 @@ def main():
     parser.add_argument(
         "--data-root",
         type=str,
-        default="../mnist",
+        default="./",
         help="Where MNIST is/will be stored",
     )
+    parser.add_argument(
+        '--save_path',
+        type=str,
+        default='/content/drive/My Drive/mnist'
+    )
+
     args = parser.parse_args()
     device = torch.device(args.device)
 
@@ -238,6 +245,8 @@ def main():
             privacy_engine.attach(optimizer)
         for epoch in range(1, args.epochs + 1):
             train(args, model, device, train_loader, optimizer, epoch)
+            if args.save_model and not args.disable_dp:
+                torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn_dp_{epoch}.pt"))
         run_results.append(test(args, model, device, test_loader))
 
     if len(run_results) > 1:
@@ -252,9 +261,6 @@ def main():
         f"{args.max_per_sample_grad_norm}_{args.batch_size}_{args.epochs}"
     )
     torch.save(run_results, f"run_results_{repro_str}.pt")
-
-    if args.save_model:
-        torch.save(model.state_dict(), f"mnist_cnn_{repro_str}.pt")
 
 
 if __name__ == "__main__":
