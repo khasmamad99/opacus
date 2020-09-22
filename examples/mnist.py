@@ -251,7 +251,7 @@ def main():
 
         acc = test(args, model, device, test_loader)
 
-        if args.save_model and not args.disable_dp:
+        if args.save_model and not args.disable_dp and epoch % 3 == 0:
             torch.save(
                 {
                     'state_dict' : model.state_dict(),
