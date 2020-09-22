@@ -90,6 +90,10 @@ def train(args, model, train_loader, optimizer, epoch, device):
                 )
 
 
+    if not args.disable_dp:
+        return epsilon, best_alpha
+
+
 def test(args, model, test_loader, device):
     model.eval()
     criterion = nn.CrossEntropyLoss()
@@ -129,7 +133,7 @@ def main():
     )
     parser.add_argument(
         "--epochs",
-        default=90,
+        default=100,
         type=int,
         metavar="N",
         help="number of total epochs to run",
@@ -183,7 +187,7 @@ def main():
     parser.add_argument(
         "-p",
         "--print-freq",
-        default=10,
+        default=5,
         type=int,
         metavar="N",
         help="print frequency (default: 10)",
@@ -214,7 +218,7 @@ def main():
     parser.add_argument(
         "--sigma",
         type=float,
-        default=1.0,
+        default=0.001,
         metavar="S",
         help="Noise multiplier (default 1.0)",
     )
@@ -260,6 +264,11 @@ def main():
         type=str,
         default="Adam",
         help="Optimizer to use (Adam, RMSprop, SGD)",
+    )
+    parser.add_argument(
+        '--save_path',
+        type=str,
+        default='/content/drive/My Drive/resnet18'
     )
 
     args = parser.parse_args()
@@ -354,24 +363,41 @@ def main():
         privacy_engine.attach(optimizer)
 
     for epoch in range(args.start_epoch, args.epochs + 1):
-        train(args, model, train_loader, optimizer, epoch, device)
+        epsilon, best_alpha = train(args, model, train_loader, optimizer, epoch, device)
         top1_acc = test(args, model, test_loader, device)
 
         # remember best acc@1 and save checkpoint
         is_best = top1_acc > best_acc1
         best_acc1 = max(top1_acc, best_acc1)
 
-        save_checkpoint(
-            {
-                "epoch": epoch + 1,
-                "arch": "ResNet18",
-                "state_dict": model.state_dict(),
-                "best_acc1": best_acc1,
-                "optimizer": optimizer.state_dict(),
-            },
-            is_best,
-            filename=args.checkpoint_file + ".tar",
-        )
+        if not args.disable_dp and epoch % 5 == 0:
+            torch.save(
+                {
+                    'state_dict' : model.state_dict(),
+                    'epoch' : epoch,
+                    'epsilon' : epsilon,
+                    'best_alpha' : best_alpha,
+                    'accuracy'  : top1_acc
+                }, 
+                os.path.join(args.save_path, f"resnet18_cifar10_dp_{epoch}.tar")
+            )
+
+        # else:
+        #     save_checkpoint(
+        #         {
+        #             "epoch": epoch,
+        #             "arch": "ResNet18",
+        #             "state_dict": model.state_dict(),
+        #             "best_acc1": best_acc1,
+        #             "optimizer": optimizer.state_dict(),
+        #         },
+        #         is_best,
+        #         filename=args.checkpoint_file + ".tar",
+        #     )
+
+    if args.disable_dp:
+        torch.save(model.state_dict(), os.path.join(args.save_path, f'resnet18_cifar10.pt'))
+        
 
 
 if __name__ == "__main__":
