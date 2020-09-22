@@ -67,6 +67,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
             f"Loss: {np.mean(losses):.6f} "
             f"(ε = {epsilon:.2f}, δ = {args.delta}) for α = {best_alpha}"
         )
+        return epsilon, best_alpha
     else:
         print(f"Train Epoch: {epoch} \t Loss: {np.mean(losses):.6f}")
 
@@ -243,10 +244,25 @@ def main():
         )
         privacy_engine.attach(optimizer)
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
+        if not args.disable_dp:
+            epsilon, best_alpha = train(args, model, device, train_loader, optimizer, epoch)
+        else:
+            train(args, model, device, train_loader, optimizer, epoch)
+
+        acc = test(args, model, device, test_loader)
+
         if args.save_model and not args.disable_dp:
-            torch.save(model.state_dict(), os.path.join(args.save_path, f"fashion_cnn_dp_{epoch}.pt"))
-    run_results.append(test(args, model, device, test_loader))
+            torch.save(
+                {
+                    'state_dict' : model.state_dict(),
+                    'epoch' : epoch,
+                    'epsilon' : epsilon,
+                    'best_alpha' : best_alpha,
+                    'accuracy'  : acc
+                }, 
+                os.path.join(args.save_path, f"fashion_cnn_dp_{epoch}.tar")
+            )
+    run_results.append(acc)
 
     if len(run_results) > 1:
         print(
@@ -262,7 +278,13 @@ def main():
     torch.save(run_results, f"run_results_{repro_str}.pt")
 
     if args.save_model and args.disable_dp:
-        torch.save(model.state_dict(), os.path.join(args.save_path, f"fashion_cnn.pt"))
+        torch.save(
+            {
+                'state_dict': model.state_dict(),
+                ''
+            }, 
+            os.path.join(args.save_path, f"fashion_cnn.pt")
+            )
 
 
 if __name__ == "__main__":
