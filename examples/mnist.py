@@ -199,14 +199,14 @@ def main():
     kwargs = {"num_workers": 1, "pin_memory": True}
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.FashionMNIST(
+        datasets.MNIST(
             args.data_root,
             train=True,
             download=True,
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
                 ]
             ),
         ),
@@ -215,13 +215,13 @@ def main():
         **kwargs,
     )
     test_loader = torch.utils.data.DataLoader(
-        datasets.FashionMNIST(
+        datasets.MNIST(
             args.data_root,
             train=False,
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
                 ]
             ),
         ),
@@ -260,7 +260,7 @@ def main():
                     'best_alpha' : best_alpha,
                     'accuracy'  : acc
                 }, 
-                os.path.join(args.save_path, f"fashion_cnn_dp_{epoch}.tar")
+                os.path.join(args.save_path, f"mnist_cnn_dp_{epoch}.tar")
             )
     run_results.append(acc)
 
@@ -278,7 +278,7 @@ def main():
     torch.save(run_results, f"run_results_{repro_str}.pt")
 
     if args.save_model and args.disable_dp:
-        torch.save(model.state_dict(), os.path.join(args.save_path, f"fashion_cnn.pt"))
+        torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn.pt"))
 
 
 if __name__ == "__main__":
