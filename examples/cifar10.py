@@ -21,7 +21,7 @@ import torchvision.transforms as transforms
 from opacus import PrivacyEngine
 from opacus.utils import stats
 from opacus.utils.module_modification import convert_batchnorm_modules
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, CIFAR100
 from tqdm import tqdm
 
 
@@ -226,7 +226,7 @@ def main():
         "-c",
         "--max-per-sample-grad_norm",
         type=float,
-        default=1.0,
+        default=100.0,
         metavar="C",
         help="Clip per-sample gradients to this norm (default 1.0)",
     )
@@ -301,15 +301,19 @@ def main():
     ]
     normalize = [
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.256, 0.276])
+
     ]
+
+
     train_transform = transforms.Compose(
         augmentations + normalize if args.disable_dp else normalize
     )
 
     test_transform = transforms.Compose(normalize)
 
-    train_dataset = CIFAR10(
+    train_dataset = CIFAR100(
         root=args.data_root, train=True, download=True, transform=train_transform
     )
 
@@ -321,7 +325,7 @@ def main():
         drop_last=True,
     )
 
-    test_dataset = CIFAR10(
+    test_dataset = CIFAR100(
         root=args.data_root, train=False, download=True, transform=test_transform
     )
     test_loader = torch.utils.data.DataLoader(
@@ -333,7 +337,7 @@ def main():
 
     best_acc1 = 0
     device = torch.device(args.device)
-    model = convert_batchnorm_modules(models.resnet18(num_classes=10))
+    model = convert_batchnorm_modules(models.resnet18(num_classes=100))
     model = model.to(device)
 
     if args.optim == "SGD":
