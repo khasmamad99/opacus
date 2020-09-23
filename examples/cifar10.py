@@ -367,7 +367,10 @@ def main():
         privacy_engine.attach(optimizer)
 
     for epoch in range(args.start_epoch, args.epochs + 1):
-        epsilon, best_alpha = train(args, model, train_loader, optimizer, epoch, device)
+        if not args.disable_dp:
+            epsilon, best_alpha = train(args, model, train_loader, optimizer, epoch, device)
+        else:
+            train(args, model, train_loader, optimizer, epoch, device)
         top1_acc = test(args, model, test_loader, device)
 
         # remember best acc@1 and save checkpoint
