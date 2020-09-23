@@ -301,8 +301,8 @@ def main():
     ]
     normalize = [
         transforms.ToTensor(),
-        # transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.256, 0.276])
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        # transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.256, 0.276])
 
     ]
 
@@ -313,7 +313,7 @@ def main():
 
     test_transform = transforms.Compose(normalize)
 
-    train_dataset = CIFAR100(
+    train_dataset = CIFAR10(
         root=args.data_root, train=True, download=True, transform=train_transform
     )
 
@@ -325,7 +325,7 @@ def main():
         drop_last=True,
     )
 
-    test_dataset = CIFAR100(
+    test_dataset = CIFAR10(
         root=args.data_root, train=False, download=True, transform=test_transform
     )
     test_loader = torch.utils.data.DataLoader(
@@ -337,7 +337,7 @@ def main():
 
     best_acc1 = 0
     device = torch.device(args.device)
-    model = convert_batchnorm_modules(models.resnet18(num_classes=100))
+    model = convert_batchnorm_modules(models.resnet18(num_classes=10))
     model = model.to(device)
 
     if args.optim == "SGD":
