@@ -9,6 +9,7 @@ Runs MNIST training with differential privacy.
 import argparse
 import os
 
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -234,10 +235,13 @@ def main():
     )
 
 
-    for sigma in [0.6, 0.9, 1.2, 1.5, 1.8, 2.1]:
+    for k, sigma in enumerate([0.6, 0.9, 1.2, 1.5, 1.8, 2.1]):
         run_results = []
         model = SampleConvNet().to(device)
         args.sigma = sigma
+
+        if k != 0:
+            args.lr = args.lr * 0.7
 
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
         if not args.disable_dp:
