@@ -235,7 +235,7 @@ def main():
     )
 
 
-    for k, sigma in enumerate([0.6, 0.9, 1.2, 1.5, 1.8, 2.1]):
+    for k, sigma in enumerate([3]):
         run_results = []
         model = SampleConvNet().to(device)
         args.sigma = sigma
