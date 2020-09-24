@@ -137,7 +137,7 @@ def main():
     parser.add_argument(
         "--lr",
         type=float,
-        default=0.1,
+        default=0.15,
         metavar="LR",
         help="learning rate (default: .1)",
     )
@@ -152,7 +152,7 @@ def main():
         "-c",
         "--max-per-sample-grad_norm",
         type=float,
-        default=1.0,
+        default=1.5,
         metavar="C",
         help="Clip per-sample gradients to this norm (default 1.0)",
     )
@@ -190,7 +190,7 @@ def main():
     parser.add_argument(
         '--save_path',
         type=str,
-        default='/content/drive/My Drive/mnist'
+        default='/content/drive/My Drive/resnet18/mnist'
     )
 
     args = parser.parse_args()
@@ -229,53 +229,58 @@ def main():
         shuffle=True,
         **kwargs,
     )
-    run_results = []
-    model = SampleConvNet().to(device)
 
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
-    if not args.disable_dp:
-        privacy_engine = PrivacyEngine(
-            model,
-            batch_size=args.batch_size,
-            sample_size=len(train_loader.dataset),
-            alphas=[1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64)),
-            noise_multiplier=args.sigma,
-            max_grad_norm=args.max_per_sample_grad_norm,
-        )
-        privacy_engine.attach(optimizer)
-    for epoch in range(1, args.epochs + 1):
+
+    for sigma in [0.6, 0.9, 1.2, 1.5, 1.8, 2.1]:
+        run_results = []
+        model = SampleConvNet().to(device)
+        args.sigma = sigma
+
+        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
         if not args.disable_dp:
-            epsilon, best_alpha = train(args, model, device, train_loader, optimizer, epoch)
-        else:
-            train(args, model, device, train_loader, optimizer, epoch)
-
-        acc = test(args, model, device, test_loader)
-
-        if args.save_model and not args.disable_dp:
-            torch.save(
-                {
-                    'state_dict' : model.state_dict(),
-                    'epoch' : epoch,
-                    'epsilon' : epsilon,
-                    'best_alpha' : best_alpha,
-                    'accuracy'  : acc
-                }, 
-                os.path.join(args.save_path, f"mnist_cnn_dp_{epoch}.tar")
+            privacy_engine = PrivacyEngine(
+                model,
+                batch_size=args.batch_size,
+                sample_size=len(train_loader.dataset),
+                alphas=[1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64)),
+                noise_multiplier=args.sigma,
+                max_grad_norm=args.max_per_sample_grad_norm,
             )
-    run_results.append(acc)
+            privacy_engine.attach(optimizer)
+        for epoch in range(1, args.epochs + 1):
+            if not args.disable_dp:
+                epsilon, best_alpha = train(args, model, device, train_loader, optimizer, epoch)
+            else:
+                train(args, model, device, train_loader, optimizer, epoch)
 
-    if len(run_results) > 1:
-        print(
-            "Accuracy averaged over {} runs: {:.2f}% ± {:.2f}%".format(
-                len(run_results), np.mean(run_results) * 100, np.std(run_results) * 100
+            acc = test(args, model, device, test_loader)
+
+            if args.save_model and not args.disable_dp:
+                torch.save(
+                    {
+                        'state_dict' : model.state_dict(),
+                        'epoch' : epoch,
+                        'epsilon' : epsilon,
+                        'best_alpha' : best_alpha,
+                        'accuracy'  : acc,
+                        'sigma' : sigma
+                    }, 
+                    os.path.join(args.save_path, f"mnist_cnn_dp_{sigma}.tar")
+                )
+        run_results.append(acc)
+
+        if len(run_results) > 1:
+            print(
+                "Accuracy averaged over {} runs: {:.2f}% ± {:.2f}%".format(
+                    len(run_results), np.mean(run_results) * 100, np.std(run_results) * 100
+                )
             )
+
+        repro_str = (
+            f"{model.name()}_{args.lr}_{args.sigma}_"
+            f"{args.max_per_sample_grad_norm}_{args.batch_size}_{args.epochs}"
         )
-
-    repro_str = (
-        f"{model.name()}_{args.lr}_{args.sigma}_"
-        f"{args.max_per_sample_grad_norm}_{args.batch_size}_{args.epochs}"
-    )
-    torch.save(run_results, f"run_results_{repro_str}.pt")
+        torch.save(run_results, f"run_results_{repro_str}.pt")
 
     if args.save_model and args.disable_dp:
         torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn.pt"))
