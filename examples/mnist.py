@@ -248,6 +248,7 @@ def main():
             )
             privacy_engine.attach(optimizer)
         for epoch in range(1, args.epochs + 1):
+            print(os.path.join(args.save_path, f"mnist_cnn_dp_{sigma}.tar"))
             if not args.disable_dp:
                 epsilon, best_alpha = train(args, model, device, train_loader, optimizer, epoch)
             else:
