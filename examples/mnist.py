@@ -231,7 +231,7 @@ def main():
     )
 
 
-    for sigma in [0.1, 0.3]:
+    for sigma in [0.1, 0.3, 3, 5]:
         run_results = []
         model = SampleConvNet().to(device)
         args.sigma = sigma
