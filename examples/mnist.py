@@ -152,7 +152,7 @@ def main():
         "-c",
         "--max-per-sample-grad_norm",
         type=float,
-        default=1.5,
+        default=100.,
         metavar="C",
         help="Clip per-sample gradients to this norm (default 1.0)",
     )
@@ -231,7 +231,7 @@ def main():
     )
 
 
-    for sigma in [0.1, 0.3, 3, 5]:
+    for sigma in [0.1, 0.5, 0.9, 1.3, 1.8, 2.5, 3.5, 5]:
         run_results = []
         model = SampleConvNet().to(device)
         args.sigma = sigma
