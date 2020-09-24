@@ -23,6 +23,9 @@ from tqdm import tqdm
 MNIST_MEAN = 0.1307
 MNIST_STD = 0.3081
 
+FashionMNIST_MEAN = 0.2860
+FashionMNIST_STD = 0.3530
+
 
 class SampleConvNet(nn.Module):
     def __init__(self):
@@ -206,7 +209,7 @@ def main():
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    transforms.Normalize((FashionMNIST_MEAN,), (FashionMNIST_STD,)),
                 ]
             ),
         ),
@@ -221,7 +224,7 @@ def main():
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    transforms.Normalize((FashionMNIST_MEAN,), (FashionMNIST_STD,)),
                 ]
             ),
         ),
@@ -231,7 +234,7 @@ def main():
     )
 
 
-    for sigma in [0.1, 0.5, 0.9, 1.3, 1.8, 2.5, 3.5, 5]:
+    for sigma in [0.5, 0.9, 1.3, 1.8, 2.5, 3.5, 5]:
         run_results = []
         model = SampleConvNet().to(device)
         args.sigma = sigma
