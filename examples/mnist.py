@@ -190,7 +190,7 @@ def main():
     parser.add_argument(
         '--save_path',
         type=str,
-        default='/content/drive/My Drive/resnet18/mnist'
+        default='/content/drive/My Drive/resnet18/fashion'
     )
 
     args = parser.parse_args()
@@ -199,14 +199,14 @@ def main():
     kwargs = {"num_workers": 1, "pin_memory": True}
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(
+        datasets.FashionMNIST(
             args.data_root,
             train=True,
             download=True,
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
                 ]
             ),
         ),
@@ -215,13 +215,13 @@ def main():
         **kwargs,
     )
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(
+        datasets.FashionMNIST(
             args.data_root,
             train=False,
             transform=transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
+                    # transforms.Normalize((MNIST_MEAN,), (MNIST_STD,)),
                 ]
             ),
         ),
@@ -248,7 +248,7 @@ def main():
             )
             privacy_engine.attach(optimizer)
         for epoch in range(1, args.epochs + 1):
-            print(os.path.join(args.save_path, f"mnist_cnn_dp_{sigma}.tar"))
+            print(os.path.join(args.save_path, f"fashion_cnn_dp_{sigma}.tar"))
             if not args.disable_dp:
                 epsilon, best_alpha = train(args, model, device, train_loader, optimizer, epoch)
             else:
@@ -266,7 +266,7 @@ def main():
                         'accuracy'  : acc,
                         'sigma' : sigma
                     }, 
-                    os.path.join(args.save_path, f"mnist_cnn_dp_{sigma}.tar")
+                    os.path.join(args.save_path, f"fashion_cnn_dp_{sigma}.tar")
                 )
         run_results.append(acc)
 
@@ -284,7 +284,7 @@ def main():
         torch.save(run_results, f"run_results_{repro_str}.pt")
 
     if args.save_model and args.disable_dp:
-        torch.save(model.state_dict(), os.path.join(args.save_path, f"mnist_cnn.pt"))
+        torch.save(model.state_dict(), os.path.join(args.save_path, f"fashion_cnn.pt"))
 
 
 if __name__ == "__main__":
