@@ -238,10 +238,10 @@ def main():
     for k, sigma in enumerate([3]):
         run_results = []
         model = SampleConvNet().to(device)
-        args.sigma = sigma
+        sigma = args.sigma
 
-        if k != 0:
-            args.lr = args.lr * 0.7
+        # if k != 0:
+        #     args.lr = args.lr * 0.7
 
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0)
         if not args.disable_dp:
